@@ -1,12 +1,15 @@
+import math
+
+from numpy.typing import NDArray
 import numpy as np
 from numpy.linalg import norm
 
 from Simplex import solve
 
 
-def interior_point_algorithm(x: np.array, A: np.array, c: np.array, alpha, acc=2):
+def interior_point_algorithm(x: NDArray, A: NDArray, c: NDArray, b: NDArray, alpha, acc=2):
     for i, constraint in enumerate(A):
-        if sum(constraint * x) > b[i]:
+        if np.sum(x.dot(constraint)) != b[i]:
             print("The method is not applicable!")
             return
     i = 1
@@ -26,18 +29,20 @@ def interior_point_algorithm(x: np.array, A: np.array, c: np.array, alpha, acc=2
         yy = np.dot(D, y)
         x = yy
         if i == 1 or i == 2 or i == 3 or i == 4:
-            print(f"In iteration {i}, we have {x=}")
+            print(f"In iteration {i}, {alpha=} we have {x=}")
             i = i + 1
         if norm(np.subtract(yy, v), ord=2) < 0.00001:
             break
-    print(f"In the last iteration {i}, we have {x=}")
+    for j in range(len(x)):
+        x[j] = round(x[j], acc)
+    print(f"In the last iteration {i}, {alpha=}, we have {x=}")
 
 
-if __name__ == '__main__':
-    C = list(map(float, input("A vector of coefficients of objective function - C: ").split()))
+def main():
+    C = list(map(float, input("A vector of coefficients of objective function with slack variables- C: ").split()))
     nA = int(input("A number of constraint functions: "))
     A = []
-    print("A matrix of coefficients of constraint function - A:")
+    print("A matrix of coefficients of constraint function with slack variables - A:")
     for i in range(nA):
         A += [list(map(float, input(f"{i + 1}: ").split()))]
     b = list(map(float, input("A vector of right-hand side numbers - b: ").split()))
@@ -48,16 +53,30 @@ if __name__ == '__main__':
     x_np = np.array(x, float)
     A_np = np.array(A, float)
     C_np = np.array(C, float)
+    b_np = np.array(b, float)
 
     interior_point_algorithm(
         x=x_np,
         A=A_np,
         c=C_np,
+        b=b_np,
         acc=acc,
         alpha=0.5
     )
+    interior_point_algorithm(
+        x=x_np,
+        A=A_np,
+        c=C_np,
+        b=b_np,
+        acc=acc,
+        alpha=0.9
+    )
     print("Simplex:")
-    solve(objective_function=x, constraint_functions=A, right_hand_side=b, accuracy=acc)
+    solve(objective_function=C, constraint_functions=A, right_hand_side=b, accuracy=acc)
+
+
+if __name__ == '__main__':
+    main()
     # interior_point_algorithm(
     #     x=np.array([2, 2, 4, 3], float),
     #     A=np.array([[2, -2, 8, 0], [-6, -1, 0, -1]], float),
