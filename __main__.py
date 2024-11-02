@@ -14,32 +14,43 @@ def interior_point_algorithm(x: NDArray, A: NDArray, c: NDArray, b: NDArray, alp
             return
     i = 1
     while True:
-        v = x
-        D = np.diag(x)
-        AA = np.dot(A, D)
-        cc = np.dot(D, c)
-        I = np.eye(4)
-        F = np.dot(AA, np.transpose(AA))
-        FI = np.linalg.inv(F)
-        H = np.dot(np.transpose(AA), FI)
-        P = np.subtract(I, np.dot(H, AA))
-        cp = np.dot(P, cc)
-        nu = np.absolute(np.min(cp))
-        y = np.add(np.ones(4, float), (alpha / nu) * cp)
-        yy = np.dot(D, y)
-        x = yy
-        if i == 1 or i == 2 or i == 3 or i == 4:
-            print(f"In iteration {i}, {alpha=} we have {x=}")
+        try:
+            v = x
+            D = np.diag(x)
+
+            AA = np.dot(A, D)
+            cc = np.dot(D, c)
+            I = np.eye(len(c))
+            F = np.dot(AA, np.transpose(AA))
+            FI = np.linalg.inv(F)
+            H = np.dot(np.transpose(AA), FI)
+            P = np.subtract(I, np.dot(H, AA))
+            cp = np.dot(P, cc)
+            nu = np.absolute(np.min(cp))
+            y = np.add(np.ones(len(c), float), (alpha / nu) * cp)
+            yy = np.dot(D, y)
+
+            x = yy
+
+            if norm(np.subtract(yy, v), ord=2) < 0.00001:
+                break
+            # print(f"In iteration {i}, {alpha=} we have:")
+            # for j in x:
+            #     print(round(j, acc), end=' ')
+            # print()
             i = i + 1
-        if norm(np.subtract(yy, v), ord=2) < 0.00001:
+        except:
             break
     for j in range(len(x)):
         x[j] = round(x[j], acc)
-    print(f"In the last iteration {i}, {alpha=}, we have {x=}")
+    print(f"In the last iteration {i}, {alpha=}, we have x:")
+    for j in x:
+        print(round(j, acc), end=' ')
+    print()
 
 
 def main():
-    C = list(map(float, input("A vector of coefficients of objective function with slack variables- C: ").split()))
+    c = list(map(float, input("A vector of coefficients of objective function with slack variables- C: ").split()))
     nA = int(input("A number of constraint functions: "))
     A = []
     print("A matrix of coefficients of constraint function with slack variables - A:")
@@ -52,13 +63,13 @@ def main():
 
     x_np = np.array(x, float)
     A_np = np.array(A, float)
-    C_np = np.array(C, float)
+    c_np = np.array(c, float)
     b_np = np.array(b, float)
 
     interior_point_algorithm(
         x=x_np,
         A=A_np,
-        c=C_np,
+        c=c_np,
         b=b_np,
         acc=acc,
         alpha=0.5
@@ -66,13 +77,13 @@ def main():
     interior_point_algorithm(
         x=x_np,
         A=A_np,
-        c=C_np,
+        c=c_np,
         b=b_np,
         acc=acc,
         alpha=0.9
     )
     print("Simplex:")
-    solve(objective_function=C, constraint_functions=A, right_hand_side=b, accuracy=acc)
+    solve(objective_function=c, constraint_functions=A, right_hand_side=b, accuracy=acc)
 
 
 if __name__ == '__main__':
